@@ -1,0 +1,39 @@
+# Dependencias de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno (NUNCA commitear)
+.env
+.env.local
+.env.*.local
+
+# Cobertura de tests
+coverage/
+.nyc_output/
+
+# Builds y dist
+dist/
+build/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Cache de Jest
+.jest-cache/
+
+# Editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos temporales
+tmp/
+temp/
