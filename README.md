@@ -4,29 +4,68 @@
 
 ## 🧠 Visión
 
-CLERE es una plataforma móvil de simulación clínica que integra neurociencias cognitivas para entrenar profesionales de la salud en respuestas a emergencias.
+CLERE es una plataforma de simulación clínica que integra neurociencias cognitivas para entrenar profesionales de la salud en respuestas a emergencias, con registro inmutable de decisiones clínicas para validez legal y académica.
 
 ## 🎯 Características Principales
 
-- 📱 Simulación clínica 100% basada en decisiones
-- 🧠 Evaluación neurocognitiva invisible
+- 📋 Registro inmutable de eventos clínicos (blockchain-style hash chain)
+- 🧠 Evaluación neurocognitiva invisible (índices CCPI, CSAI, CCSS, CLDL)
 - 🏆 Certificación internacional (INCLC - Online Track)
-- 🚦 Sistema de feedback visual integrado en signos vitales
-- 📊 Perfil de liderazgo clínico predictivo
+- ⚖️ Reportes médico-legales con trazabilidad criptográfica
+- 🌍 Multi-jurisdicción: USA, Puerto Rico y personalizable
 
-## 🌍 Jurisdicciones Soportadas
+## 🏗️ Estructura del Proyecto
 
-- Estados Unidos (USA)
-- Puerto Rico (PR)
-- Escalable internacionalmente
+```
+/
+├── backend/          # Core Audit Engine (Node.js + Express + PostgreSQL)
+│   ├── src/          # Servicios, modelos, controladores, rutas, middleware
+│   ├── migrations/   # Schema de PostgreSQL (5 tablas)
+│   └── tests/        # 27 tests unitarios
+│
+├── frontend/         # Dashboard (Next.js 16 + React 19 + TypeScript)
+│   ├── app/          # App Router: Dashboard, Eventos, Audit Trail, Métricas
+│   ├── components/   # Navbar, EventForm, AuditTrail, StatCard, etc.
+│   ├── lib/          # API client, Zod schemas, TanStack Query config
+│   └── hooks/        # Custom React Query hooks
+│
+└── README.md
+```
 
-## 🏗️ Stack Técnico
+## 🛠️ Stack Técnico
 
-- **Frontend:** React Native / Flutter
-- **Backend:** Node.js + Express
-- **Database:** PostgreSQL + Redis
-- **AI Orchestration:** n8n
-- **Cloud:** AWS
+| Capa | Tecnología |
+|------|-----------|
+| **Frontend** | Next.js 16, React 19, TypeScript strict, Tailwind CSS 4 |
+| **Data Fetching** | TanStack Query v5 |
+| **Validation** | Zod v4 |
+| **Animations** | Framer Motion |
+| **Icons** | Lucide React |
+| **Backend** | Node.js, Express |
+| **Database** | PostgreSQL |
+| **Security** | SHA-256 Hash Chain, JWT (placeholder), Rate Limiting |
+| **Cloud (futuro)** | AWS, Redis, n8n |
+
+## 🚀 Inicio Rápido
+
+### Backend (Core Audit Engine)
+```bash
+cd backend
+npm install
+cp .env.example .env   # Configurar DATABASE_URL
+psql -f migrations/001_initial_schema.sql
+npm run dev            # Puerto 3000
+```
+
+### Frontend (Dashboard)
+```bash
+cd frontend
+npm install
+cp .env.example .env.local   # Configurar NEXT_PUBLIC_API_URL
+npm run dev                   # Puerto 3001
+```
+
+Acceder a: `http://localhost:3001`
 
 ## 📜 Licencia
 
