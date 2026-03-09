@@ -5,7 +5,6 @@
  * Configura middleware global, rutas y manejo de errores.
  * Separado de server.js para facilitar testing (supertest).
  *
- * TODO: Agregar rate limiting (express-rate-limit) para producción
  * TODO: Implementar compression middleware para respuestas grandes
  * TODO: Agregar OpenAPI/Swagger para documentación interactiva
  */
@@ -34,7 +33,11 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3000', 'http://localhost:8080'],
+    : [
+      'http://localhost:3000',  // backend dev / legacy
+      'http://localhost:3001',  // Next.js frontend dev
+      'http://localhost:8080',  // alternate frontend
+    ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

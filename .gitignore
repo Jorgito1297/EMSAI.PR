@@ -1,0 +1,20 @@
+# Root-level gitignore for CLERE monorepo
+
+# Environment secrets (never commit)
+.env
+.env.local
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode/
+.idea/
+*.swp
+
+# Docker build artifacts
+*.tar
+
+# Logs
+*.log
