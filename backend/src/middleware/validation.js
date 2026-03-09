@@ -109,14 +109,6 @@ const validateEventLog = (req, res, next) => {
 };
 
 /**
- * Schema de validación para verificar UUIDs en path params
- */
-const uuidParamSchema = Joi.object({
-  id: Joi.string().uuid({ version: 'uuidv4' }).required()
-    .messages({ 'string.guid': 'El ID debe ser un UUID v4 válido' }),
-});
-
-/**
  * Middleware de validación para parámetros UUID en la URL.
  *
  * @param {string} paramName - Nombre del parámetro a validar

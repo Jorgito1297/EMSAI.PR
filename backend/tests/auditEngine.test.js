@@ -251,7 +251,7 @@ describe('API Endpoints - POST /api/v1/events', () => {
   });
 
   test('debe retornar 400 si falta session_id', async () => {
-    const { session_id, ...invalidRequest } = validEventRequest;
+    const { session_id: _session_id, ...invalidRequest } = validEventRequest;
 
     const response = await request(app)
       .post('/api/v1/events')

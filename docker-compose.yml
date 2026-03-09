@@ -1,0 +1,93 @@
+# ============================================================
+# CLERE — Full-Stack Docker Compose
+#
+# Services:
+#   db        — PostgreSQL 16 (persistent volume)
+#   backend   — Core Audit Engine (Node.js / Express)
+#   frontend  — Dashboard (Next.js 16)
+#
+# Usage:
+#   Development:  docker-compose up
+#   With rebuild: docker-compose up --build
+#   Stop:         docker-compose down
+#   Clean reset:  docker-compose down -v
+# ============================================================
+
+services:
+  # ----------------------------------------------------------
+  # Database
+  # ----------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: clere_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: clere
+      POSTGRES_PASSWORD: clere_dev_password
+      POSTGRES_DB: clere_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-run schema migration on first start
+      - ./backend/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clere -d clere_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ----------------------------------------------------------
+  # Backend — Core Audit Engine
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clere_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://clere:clere_dev_password@db:5432/clere_db
+      # IMPORTANT: Override JWT_SECRET in production with a strong random value
+      # Generate with: openssl rand -hex 64
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ----------------------------------------------------------
+  # Frontend — Next.js Dashboard
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: clere_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+    ports:
+      - "3001:3001"
+
+# ----------------------------------------------------------
+# Volumes
+# ----------------------------------------------------------
+volumes:
+  postgres_data:
+    name: clere_postgres_data
