@@ -19,6 +19,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const eventsRouter = require('./routes/events');
+const sessionsRouter = require('./routes/sessions');
 
 const app = express();
 
@@ -67,6 +68,9 @@ app.get('/health', (req, res) => {
 
 // Rutas de eventos clínicos (v1)
 app.use('/api/v1/events', eventsRouter);
+
+// Rutas de sesiones de simulación (v1)
+app.use('/api/v1/sessions', sessionsRouter);
 
 // ============================================================
 // Manejo de Errores Global

@@ -13,6 +13,14 @@ import {
   IntegrityCheckSchema,
   HealthResponse,
   HealthResponseSchema,
+  CreateSessionInput,
+  CreateSessionResponse,
+  CreateSessionResponseSchema,
+  GetSessionResponse,
+  GetSessionResponseSchema,
+  UpdateSessionStatusInput,
+  UpdateSessionStatusResponse,
+  UpdateSessionStatusResponseSchema,
 } from './schemas';
 
 const BASE_URL =
@@ -86,4 +94,35 @@ export async function validateSession(
 export async function getHealth(): Promise<HealthResponse> {
   const data = await apiFetch<unknown>('/health');
   return HealthResponseSchema.parse(data);
+}
+
+/** POST /api/v1/sessions — create a new simulation session */
+export async function createSession(
+  payload: CreateSessionInput,
+): Promise<CreateSessionResponse> {
+  const data = await apiFetch<unknown>('/api/v1/sessions', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return CreateSessionResponseSchema.parse(data);
+}
+
+/** GET /api/v1/sessions/:sessionId — get session status and info */
+export async function getSession(
+  sessionId: string,
+): Promise<GetSessionResponse> {
+  const data = await apiFetch<unknown>(`/api/v1/sessions/${sessionId}`);
+  return GetSessionResponseSchema.parse(data);
+}
+
+/** PATCH /api/v1/sessions/:sessionId/status — update session status */
+export async function updateSessionStatus(
+  sessionId: string,
+  payload: UpdateSessionStatusInput,
+): Promise<UpdateSessionStatusResponse> {
+  const data = await apiFetch<unknown>(`/api/v1/sessions/${sessionId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  return UpdateSessionStatusResponseSchema.parse(data);
 }

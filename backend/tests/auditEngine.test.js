@@ -385,3 +385,301 @@ describe('API Endpoints - GET /api/v1/events/:eventId', () => {
     expect(response.body.error).toContain('no encontrado');
   });
 });
+
+// ============================================================
+// Tests de la API de Sesiones
+// ============================================================
+
+describe('API Endpoints - POST /api/v1/sessions', () => {
+  const validSessionRequest = {
+    scenario_type: 'Field1',
+    jurisdiction_profile: 'USA',
+  };
+
+  const mockSession = {
+    session_id: '550e8400-e29b-41d4-a716-446655440010',
+    scenario_type: 'Field1',
+    jurisdiction_profile: 'USA',
+    user_id: null,
+    team_id: null,
+    status: 'active',
+    started_at: new Date().toISOString(),
+    paused_at: null,
+    completed_at: null,
+    notes: null,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('debe crear una sesión válida y retornar 201 con session_id', async () => {
+    db.query.mockResolvedValueOnce({ rows: [mockSession], rowCount: 1 });
+
+    const response = await request(app)
+      .post('/api/v1/sessions')
+      .send(validSessionRequest)
+      .expect('Content-Type', /json/)
+      .expect(201);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.session_id).toBeDefined();
+    expect(response.body.status).toBe('active');
+    expect(response.body.scenario_type).toBe('Field1');
+  });
+
+  test('debe retornar 400 si falta scenario_type', async () => {
+    const response = await request(app)
+      .post('/api/v1/sessions')
+      .send({ jurisdiction_profile: 'USA' })
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toBeDefined();
+  });
+
+  test('debe retornar 400 si jurisdiction_profile es inválido', async () => {
+    const response = await request(app)
+      .post('/api/v1/sessions')
+      .send({ ...validSessionRequest, jurisdiction_profile: 'INVALID' })
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+  });
+
+  test('debe retornar 400 si scenario_type es inválido', async () => {
+    const response = await request(app)
+      .post('/api/v1/sessions')
+      .send({ ...validSessionRequest, scenario_type: 'InvalidScenario' })
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+  });
+
+  test('debe aceptar sesión con campos opcionales', async () => {
+    const fullRequest = {
+      ...validSessionRequest,
+      user_id: '550e8400-e29b-41d4-a716-446655440001',
+      notes: 'Sesión de prueba',
+    };
+
+    db.query.mockResolvedValueOnce({
+      rows: [{ ...mockSession, user_id: fullRequest.user_id, notes: 'Sesión de prueba' }],
+      rowCount: 1,
+    });
+
+    const response = await request(app)
+      .post('/api/v1/sessions')
+      .send(fullRequest)
+      .expect(201);
+
+    expect(response.body.success).toBe(true);
+  });
+});
+
+describe('API Endpoints - GET /api/v1/sessions/:sessionId', () => {
+  const mockSession = {
+    session_id: '550e8400-e29b-41d4-a716-446655440010',
+    scenario_type: 'Field1',
+    jurisdiction_profile: 'USA',
+    user_id: null,
+    team_id: null,
+    status: 'active',
+    started_at: new Date().toISOString(),
+    paused_at: null,
+    completed_at: null,
+    notes: null,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('debe retornar 400 para un UUID inválido', async () => {
+    const response = await request(app)
+      .get('/api/v1/sessions/not-a-valid-uuid')
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+  });
+
+  test('debe retornar 404 si la sesión no existe', async () => {
+    db.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const response = await request(app)
+      .get('/api/v1/sessions/550e8400-e29b-41d4-a716-446655440010')
+      .expect(404);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toContain('no encontrada');
+  });
+
+  test('debe retornar la sesión si existe', async () => {
+    db.query.mockResolvedValueOnce({ rows: [mockSession], rowCount: 1 });
+
+    const response = await request(app)
+      .get('/api/v1/sessions/550e8400-e29b-41d4-a716-446655440010')
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.session).toBeDefined();
+    expect(response.body.session.session_id).toBe(mockSession.session_id);
+    expect(response.body.session.status).toBe('active');
+  });
+});
+
+describe('API Endpoints - PATCH /api/v1/sessions/:sessionId/status', () => {
+  const sessionId = '550e8400-e29b-41d4-a716-446655440010';
+  const mockActiveSession = {
+    session_id: sessionId,
+    scenario_type: 'Field1',
+    jurisdiction_profile: 'USA',
+    user_id: null,
+    team_id: null,
+    status: 'active',
+    started_at: new Date().toISOString(),
+    paused_at: null,
+    completed_at: null,
+    notes: null,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('debe retornar 400 para UUID inválido', async () => {
+    const response = await request(app)
+      .patch('/api/v1/sessions/invalid-uuid/status')
+      .send({ status: 'paused' })
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+  });
+
+  test('debe retornar 400 si status es inválido', async () => {
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'invalid_status' })
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+  });
+
+  test('debe retornar 400 si falta status en el body', async () => {
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({})
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+  });
+
+  test('debe retornar 404 si la sesión no existe', async () => {
+    db.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'paused' })
+      .expect(404);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toContain('no encontrada');
+  });
+
+  test('debe actualizar el estado de active a paused', async () => {
+    const updatedSession = {
+      ...mockActiveSession,
+      status: 'paused',
+      paused_at: new Date().toISOString(),
+    };
+
+    // Mock getSessionById (lectura para verificar estado actual)
+    db.query.mockResolvedValueOnce({ rows: [mockActiveSession], rowCount: 1 });
+    // Mock updateSessionStatus
+    db.query.mockResolvedValueOnce({ rows: [updatedSession], rowCount: 1 });
+
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'paused' })
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.status).toBe('paused');
+    expect(response.body.previous_status).toBe('active');
+  });
+
+  test('debe actualizar el estado de active a completed', async () => {
+    const updatedSession = {
+      ...mockActiveSession,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    };
+
+    db.query.mockResolvedValueOnce({ rows: [mockActiveSession], rowCount: 1 });
+    db.query.mockResolvedValueOnce({ rows: [updatedSession], rowCount: 1 });
+
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'completed' })
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.status).toBe('completed');
+  });
+
+  test('debe retornar 409 al intentar cambiar estado de sesión ya completada', async () => {
+    const completedSession = {
+      ...mockActiveSession,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    };
+
+    db.query.mockResolvedValueOnce({ rows: [completedSession], rowCount: 1 });
+
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'active' })
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.current_status).toBe('completed');
+  });
+
+  test('debe retornar 409 al intentar cambiar estado de sesión abandonada', async () => {
+    const abandonedSession = {
+      ...mockActiveSession,
+      status: 'abandoned',
+      completed_at: new Date().toISOString(),
+    };
+
+    db.query.mockResolvedValueOnce({ rows: [abandonedSession], rowCount: 1 });
+
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'paused' })
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.current_status).toBe('abandoned');
+  });
+
+  test('debe aceptar actualización con notas opcionales', async () => {
+    const updatedSession = {
+      ...mockActiveSession,
+      status: 'paused',
+      paused_at: new Date().toISOString(),
+      notes: 'Pausa de descanso',
+    };
+
+    db.query.mockResolvedValueOnce({ rows: [mockActiveSession], rowCount: 1 });
+    db.query.mockResolvedValueOnce({ rows: [updatedSession], rowCount: 1 });
+
+    const response = await request(app)
+      .patch(`/api/v1/sessions/${sessionId}/status`)
+      .send({ status: 'paused', notes: 'Pausa de descanso' })
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.notes).toBe('Pausa de descanso');
+  });
+});
