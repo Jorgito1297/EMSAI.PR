@@ -76,11 +76,11 @@ export default function EventForm() {
       aria-label="Formulario de registro de evento clínico"
       className="space-y-5"
     >
-      {/* Session & Patient IDs */}
+      {/* IDs de Sesión y Paciente */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           id={fieldId('session_id', uid)}
-          label="Session ID *"
+          label="ID de Sesión *"
           name="session_id"
           value={form.session_id}
           placeholder="xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx"
@@ -89,7 +89,7 @@ export default function EventForm() {
         />
         <Field
           id={fieldId('patient_id', uid)}
-          label="Patient ID"
+          label="ID de Paciente"
           name="patient_id"
           value={form.patient_id ?? ''}
           placeholder="UUID del paciente (opcional)"
@@ -188,7 +188,7 @@ export default function EventForm() {
       {/* Risk score */}
       <Field
         id={fieldId('risk_score', uid)}
-        label="Risk Score (0–100)"
+        label="Puntaje de Riesgo (0–100)"
         name="risk_score"
         type="number"
         value={form.risk_score ?? ''}

@@ -50,7 +50,7 @@ export default function AuditTrail() {
         aria-label="Buscar sesión por ID"
       >
         <label htmlFor="session-search" className="sr-only">
-          Session ID
+          ID de Sesión
         </label>
         <input
           id="session-search"
@@ -84,7 +84,7 @@ export default function AuditTrail() {
           {/* Summary header */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-4">
             <div>
-              <p className="text-xs text-slate-500">Session</p>
+              <p className="text-xs text-slate-500">Sesión</p>
               <p className="font-mono text-sm font-medium break-all">{data.sessionId}</p>
             </div>
             <HashBadge
@@ -173,10 +173,10 @@ function EventRow({ event, index }: { event: EventRecord; index: number }) {
           className="border-t border-slate-100 p-3"
         >
           <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
-            <Detail label="Event ID" value={event.event_id} mono />
-            <Detail label="Session ID" value={event.session_id} mono />
+            <Detail label="ID de Evento" value={event.event_id} mono />
+            <Detail label="ID de Sesión" value={event.session_id} mono />
             <Detail
-              label="Timestamp UTC"
+              label="Marca de Tiempo UTC"
               value={new Date(event.timestamp_utc).toLocaleString('es-PR')}
             />
             <Detail label="Jurisdicción" value={event.jurisdiction_profile} />
@@ -186,7 +186,7 @@ function EventRow({ event, index }: { event: EventRecord; index: number }) {
               <Detail label="Tiempo respuesta" value={`${event.response_time_ms} ms`} />
             )}
             {event.risk_score !== null && (
-              <Detail label="Risk Score" value={String(event.risk_score)} />
+              <Detail label="Puntaje de Riesgo" value={String(event.risk_score)} />
             )}
             <div className="sm:col-span-2">
               <dt className="font-medium text-slate-500">Hash Signature</dt>

@@ -131,8 +131,90 @@ const validateUuidParam = (paramName = 'id') => (req, res, next) => {
   next();
 };
 
+/**
+ * Schema de validación para el endpoint POST /api/v1/sessions
+ */
+const createSessionSchema = Joi.object({
+  scenario_type: Joi.string().valid(
+    'Field1', 'Field2', 'Field3', 'Field4',
+    'Hospital', 'AirMed', 'MassCasualty'
+  ).required()
+    .messages({ 'any.only': 'scenario_type inválido' }),
+
+  jurisdiction_profile: Joi.string().valid('USA', 'PR', 'Custom').required()
+    .messages({ 'any.only': 'jurisdiction_profile debe ser: USA, PR, o Custom' }),
+
+  user_id: Joi.string().uuid({ version: 'uuidv4' }).optional().allow(null),
+
+  team_id: Joi.string().uuid({ version: 'uuidv4' }).optional().allow(null),
+
+  notes: Joi.string().max(1000).optional().allow(null, ''),
+});
+
+/**
+ * Schema de validación para el endpoint PATCH /api/v1/sessions/:sessionId/status
+ */
+const updateSessionStatusSchema = Joi.object({
+  status: Joi.string().valid('active', 'paused', 'completed', 'abandoned').required()
+    .messages({ 'any.only': 'status debe ser: active, paused, completed, o abandoned' }),
+
+  notes: Joi.string().max(1000).optional().allow(null, ''),
+});
+
+/**
+ * Middleware de validación para crear sesión.
+ */
+const validateCreateSession = (req, res, next) => {
+  const { error, value } = createSessionSchema.validate(req.body, {
+    abortEarly: false,
+    stripUnknown: true,
+  });
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      error: 'Datos de entrada inválidos',
+      details: error.details.map((d) => ({
+        field: d.path.join('.'),
+        message: d.message,
+      })),
+    });
+  }
+
+  req.body = value;
+  next();
+};
+
+/**
+ * Middleware de validación para actualizar estado de sesión.
+ */
+const validateUpdateSessionStatus = (req, res, next) => {
+  const { error, value } = updateSessionStatusSchema.validate(req.body, {
+    abortEarly: false,
+    stripUnknown: true,
+  });
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      error: 'Datos de entrada inválidos',
+      details: error.details.map((d) => ({
+        field: d.path.join('.'),
+        message: d.message,
+      })),
+    });
+  }
+
+  req.body = value;
+  next();
+};
+
 module.exports = {
   validateEventLog,
   validateUuidParam,
+  validateCreateSession,
+  validateUpdateSessionStatus,
   eventLogSchema,
+  createSessionSchema,
+  updateSessionStatusSchema,
 };

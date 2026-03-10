@@ -115,3 +115,78 @@ export const HealthResponseSchema = z.object({
 });
 
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
+
+// ============================================================
+// Session schemas
+// ============================================================
+
+export const SessionStatus = z.enum(['active', 'paused', 'completed', 'abandoned']);
+
+/** Schema for POST /api/v1/sessions request body */
+export const CreateSessionSchema = z.object({
+  scenario_type: ScenarioType,
+  jurisdiction_profile: JurisdictionProfile,
+  user_id: z.string().uuid().optional(),
+  team_id: z.string().uuid().optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
+
+/** Schema for POST /api/v1/sessions response */
+export const CreateSessionResponseSchema = z.object({
+  success: z.boolean(),
+  session_id: z.string().uuid(),
+  status: SessionStatus,
+  scenario_type: ScenarioType,
+  jurisdiction_profile: JurisdictionProfile,
+  started_at: z.string(),
+});
+
+export type CreateSessionResponse = z.infer<typeof CreateSessionResponseSchema>;
+
+/** Schema for a full session record */
+export const SessionRecordSchema = z.object({
+  session_id: z.string().uuid(),
+  scenario_type: ScenarioType,
+  jurisdiction_profile: JurisdictionProfile,
+  user_id: z.string().uuid().nullable(),
+  team_id: z.string().uuid().nullable(),
+  status: SessionStatus,
+  started_at: z.string(),
+  paused_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  notes: z.string().nullable(),
+});
+
+export type SessionRecord = z.infer<typeof SessionRecordSchema>;
+
+/** Schema for GET /api/v1/sessions/:sessionId response */
+export const GetSessionResponseSchema = z.object({
+  success: z.boolean(),
+  session: SessionRecordSchema,
+});
+
+export type GetSessionResponse = z.infer<typeof GetSessionResponseSchema>;
+
+/** Schema for PATCH /api/v1/sessions/:sessionId/status request */
+export const UpdateSessionStatusSchema = z.object({
+  status: SessionStatus,
+  notes: z.string().max(1000).optional(),
+});
+
+export type UpdateSessionStatusInput = z.infer<typeof UpdateSessionStatusSchema>;
+
+/** Schema for PATCH /api/v1/sessions/:sessionId/status response */
+export const UpdateSessionStatusResponseSchema = z.object({
+  success: z.boolean(),
+  session_id: z.string().uuid(),
+  status: SessionStatus,
+  previous_status: SessionStatus,
+  started_at: z.string(),
+  paused_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  notes: z.string().nullable(),
+});
+
+export type UpdateSessionStatusResponse = z.infer<typeof UpdateSessionStatusResponseSchema>;
