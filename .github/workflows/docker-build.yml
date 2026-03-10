@@ -1,0 +1,120 @@
+# ============================================================
+# CLERE — Docker Build Test
+#
+# Jobs:
+#   build-backend  — Build backend Docker image with Buildx
+#   build-frontend — Build frontend Docker image with Buildx
+#   compose-test   — Spin up full stack and verify health checks
+#
+# Triggers on push/PR to main or develop.
+# ============================================================
+
+name: Docker Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ------------------------------------------------------------
+  # Build backend image
+  # ------------------------------------------------------------
+  build-backend:
+    name: Build Backend Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: clere-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ------------------------------------------------------------
+  # Build frontend image
+  # ------------------------------------------------------------
+  build-frontend:
+    name: Build Frontend Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: clere-frontend:test
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:3000
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ------------------------------------------------------------
+  # Verify full stack with docker-compose
+  # ------------------------------------------------------------
+  compose-test:
+    name: Docker Compose Stack Test
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env file for docker-compose
+        run: |
+          cat > .env <<'EOF'
+          JWT_SECRET=test-secret-for-ci
+          ALLOWED_ORIGINS=http://localhost:3001
+          NEXT_PUBLIC_API_URL=http://localhost:3000
+          EOF
+
+      - name: Start stack
+        run: docker-compose up -d --build
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for backend to be healthy..."
+          for i in $(seq 1 12); do
+            if curl --silent --fail http://localhost:3000/health; then
+              echo "Backend is up"
+              break
+            fi
+            echo "Attempt $i/12 — retrying in 10s..."
+            sleep 10
+          done
+
+          echo "Waiting for frontend to be healthy..."
+          for i in $(seq 1 12); do
+            if curl --silent --fail http://localhost:3001/; then
+              echo "Frontend is up"
+              break
+            fi
+            echo "Attempt $i/12 — retrying in 10s..."
+            sleep 10
+          done
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker-compose logs
+
+      - name: Tear down stack
+        if: always()
+        run: docker-compose down -v

@@ -1,5 +1,10 @@
 # CLERE - Centro de Liderazgo en Respuestas a Emergencias
 
+[![Backend CI](https://github.com/Jorgito1297/EMSAI.PR/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Jorgito1297/EMSAI.PR/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/Jorgito1297/EMSAI.PR/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Jorgito1297/EMSAI.PR/actions/workflows/frontend-ci.yml)
+[![Docker Build](https://github.com/Jorgito1297/EMSAI.PR/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Jorgito1297/EMSAI.PR/actions/workflows/docker-build.yml)
+[![codecov](https://codecov.io/gh/Jorgito1297/EMSAI.PR/branch/main/graph/badge.svg)](https://codecov.io/gh/Jorgito1297/EMSAI.PR)
+
 **"Aprende Jugando. Responde con Excelencia."**
 
 ## 🧠 Visión
