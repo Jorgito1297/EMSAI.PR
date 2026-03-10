@@ -1,0 +1,136 @@
+# ============================================================
+# CLERE — Backend CI
+#
+# Jobs:
+#   lint     — ESLint
+#   test     — Jest with PostgreSQL 16-alpine service
+#   security — npm audit
+#
+# Triggers on push/PR to main or develop when backend/** changes.
+# ============================================================
+
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+
+permissions:
+  contents: read
+
+jobs:
+  # ------------------------------------------------------------
+  # Lint
+  # ------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: backend
+        run: npm run lint
+
+  # ------------------------------------------------------------
+  # Test (requires PostgreSQL)
+  # ------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: clere_test
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: clere_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://clere_test:test_password@localhost:5432/clere_test_db
+      NODE_ENV: test
+      JWT_SECRET: test-secret-for-ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run database migrations
+        env:
+          PGPASSWORD: test_password
+        run: |
+          psql -h localhost -U clere_test -d clere_test_db \
+            -f backend/migrations/001_initial_schema.sql
+
+      - name: Run tests with coverage
+        working-directory: backend
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: backend
+          fail_ci_if_error: false
+
+  # ------------------------------------------------------------
+  # Security audit
+  # ------------------------------------------------------------
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: backend
+        run: npm audit
+        continue-on-error: true
