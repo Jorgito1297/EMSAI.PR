@@ -148,9 +148,9 @@ export default function MetricsClient() {
       <form
         onSubmit={handleSearch}
         className="flex gap-2"
-        aria-label="Buscar métricas por Session ID"
+        aria-label="Buscar métricas por ID de Sesión"
       >
-        <label htmlFor="metrics-search" className="sr-only">Session ID</label>
+        <label htmlFor="metrics-search" className="sr-only">ID de Sesión</label>
         <input
           id="metrics-search"
           type="text"
